@@ -1,1 +1,3 @@
-# PathOfExile_six_link_simulator
+# Path of exile 6 Link simulator
+
+Just for fun.

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoE 6-Link Simulator</title>
+    <script src="assets/jquery-3.7.1.min.js"></script>
+    <script src="assets/bootstrap.bundle.min.js"></script>
+    <link href="assets/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light">
+
+<div class="container mt-5">
+    <h1 class="text-center">Path of Exile 6-Link Simulator</h1>
+    <div class="row">
+        <div class="col-md-3 offset-md-3">
+            <div class="mb-3">
+                <label for="maxTries" class="form-label">Maximum Tries (Optional):</label>
+                <input type="number" id="maxTries" class="form-control" placeholder="Enter maximum number of tries">
+            </div>
+        </div>
+        <div class="col-md-6 offset-md-3">
+            <div class="mb-3">
+                <button id="simulateButton" class="btn btn-primary w-100">Simulate</button>
+            </div>
+            <div class="mb-3">
+                <label for="results" class="form-label">Results:</label>
+                <textarea id="results" class="form-control" rows="5" readonly></textarea>
+            </div>
+            <div class="mb-3">
+                <p id="stats" class="text-center"></p>
+            </div>
+            <div class="mb-3">
+                <h4>Simulation History</h4>
+                <p id="summary" class="mt-3"></p>
+                <ul id="history" class="list-group"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    let fadeOldHistoryTimeout = setTimeout(fadeOldHistory.bind(), 1500);
+
+    function fadeOldHistory() {
+        $('#history').fadeOut(1500, function () {
+            $(this).slideUp(150, function () {
+                $(this).empty();
+            }).fadeIn();
+        });
+    }
+
+    $(document).ready(function () {
+
+        let simulations = [];
+
+        $('#simulateButton').click(function () {
+            const maxTries = parseInt($('#maxTries').val()) || 1;
+            simulateMultipleTimes(maxTries);
+        });
+
+        function simulateMultipleTimes(maxTries) {
+            for (let i = 0; i < maxTries; i++) {
+                simulate(maxTries === 1);
+            }
+        }
+
+        function simulate(displayHistoric = true) {
+            const chance6L = 1 / 1000;
+            let fusingsUsed = 0;
+            let sixLinkAchieved = false;
+
+            while (!sixLinkAchieved) {
+                fusingsUsed++;
+                let roll = Math.random();
+
+                if (roll <= chance6L) {
+                    sixLinkAchieved = true;
+                }
+            }
+
+            displayResults(fusingsUsed);
+            updateHistory(fusingsUsed, displayHistoric);
+            simulations.push(fusingsUsed);
+        }
+
+        function displayResults(fusingsUsed) {
+            const resultText = `It took ${fusingsUsed} Orbs of Fusing to get a 6-Link.`;
+            $('#results').val(resultText);
+
+            const within1500 = fusingsUsed <= 1500 ? "Yes" : "No";
+            $('#stats').html(`
+            Average fusings per 6L: ${(fusingsUsed / 1).toFixed(2)}<br>
+            Achieved within 1500 fusings: ${within1500}
+        `);
+        }
+
+        function updateHistory(fusingsUsed, displayHistory) {
+            const within1500 = fusingsUsed <= 1500 ? "Yes" : "No";
+            const historyEntry = `<li class="list-group-item">
+            <strong>${fusingsUsed} fusings</strong> - 6L Achieved - Within 1500: ${within1500}
+        </li>`;
+            if (displayHistory) {
+                clearTimeout(fadeOldHistoryTimeout);
+                $('#history').append(historyEntry);
+                fadeOldHistoryTimeout = setTimeout(fadeOldHistory.bind(), 1500);
+            }
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const totalSimulations = simulations.length;
+            const over1500 = simulations.filter(fusings => fusings > 1500).length;
+            const averageFusings = (simulations.reduce((sum, fusings) => sum + fusings, 0) / totalSimulations).toFixed(2);
+
+            $('#summary').html(`
+            <strong>Total Simulations:</strong> ${totalSimulations}<br>
+            <strong>Average fusings per 6L:</strong> ${averageFusings}<br>
+            <strong>6L Achieved after more than 1500 fusings:</strong> ${over1500} (${((over1500 / totalSimulations) * 100).toFixed(2)}%)
+        `);
+        }
+    });
+
+
+</script>
+
+</body>
+</html>
